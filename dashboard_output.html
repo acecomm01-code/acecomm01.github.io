@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MoneyGrandpa 대시보드</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e}
+.header{background:linear-gradient(135deg,#1a1a2e,#0f3460);color:white;padding:28px 40px;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:1.6em;font-weight:700}
+.header .sub{color:#a0b0c8;font-size:0.85em;margin-top:4px}
+.refresh-btn{background:#0073aa;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:0.9em;font-weight:600}
+.refresh-btn:hover{background:#005f8d}
+.container{max-width:1200px;margin:0 auto;padding:28px 20px}
+.grid{display:grid;gap:18px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.card{background:white;border-radius:12px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.stat-card{text-align:center}
+.stat-card .num{font-size:2.6em;font-weight:800;line-height:1;margin:8px 0}
+.stat-card .lbl{color:#666;font-size:0.82em;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-card .sub{color:#999;font-size:0.78em;margin-top:4px}
+.blue{color:#0073aa}.green{color:#27ae60}.orange{color:#e67e22}.purple{color:#8e44ad}
+.red{color:#e74c3c}.teal{color:#16a085}.indigo{color:#3498db}.pink{color:#e84393}
+h2{font-size:1em;font-weight:700;margin-bottom:14px;color:#1a1a2e}
+.sec{font-size:1.2em;font-weight:700;margin:28px 0 14px;color:#1a1a2e;border-left:4px solid #0073aa;padding-left:12px}
+.sec-sub{font-size:0.95em;font-weight:600;margin:18px 0 10px;color:#1a1a2e;border-left:3px solid #999;padding-left:10px}
+.cat-row{display:flex;align-items:center;margin-bottom:10px;gap:10px}
+.cat-label{width:90px;font-size:0.83em;font-weight:600;color:#444}
+.cat-bar-bg{flex:1;background:#f0f2f5;border-radius:6px;height:26px;overflow:hidden}
+.cat-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;color:white;font-size:0.78em;font-weight:700}
+.cat-count{width:36px;text-align:right;font-size:0.88em;font-weight:700}
+.tl-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:#f8f9fa;font-size:0.82em;margin-bottom:6px}
+.tl-date{color:#888;width:45px;flex-shrink:0}
+.tl-id{color:#0073aa;font-weight:700;width:42px;flex-shrink:0}
+a.tl-slug{flex:1;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none}
+a.tl-slug:hover{color:#0073aa;text-decoration:underline}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:0.72em;font-weight:600;flex-shrink:0;margin-left:3px}
+.badge-publish{background:#d4edda;color:#155724}
+.badge-future{background:#fff3cd;color:#856404}
+.badge-health{background:#d1ecf1;color:#0c5460}
+.badge-economy{background:#d4edda;color:#155724}
+.badge-life{background:#f8d7da;color:#721c24}
+.badge-travel{background:#e2d9f3;color:#5a2d82}
+.m-row{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:0.83em}
+.m-label{width:70px;font-weight:600;color:#555}
+.m-bar{flex:1;color:#0073aa;letter-spacing:-1px;font-size:0.9em}
+.m-count{color:#888;width:40px;text-align:right}
+.query-header{display:flex;gap:10px;padding:10px 12px;background:#f0f2f5;border-radius:8px;font-weight:600;font-size:0.82em;margin-bottom:8px}
+.qh-text{flex:1}
+.qh-clicks{width:50px;text-align:right;color:#e74c3c}
+.qh-impr{width:50px;text-align:right;color:#16a085}
+.qh-ctr{width:40px;text-align:right;color:#3498db}
+.qh-pos{width:40px;text-align:right;color:#e84393}
+.query-row{display:flex;gap:10px;padding:8px 12px;border-bottom:1px solid #f0f2f5;font-size:0.81em;align-items:center}
+.q-text{flex:1;color:#333;overflow:hidden;text-overflow:ellipsis}
+.q-clicks{width:50px;text-align:right;font-weight:600;color:#e74c3c}
+.q-impr{width:50px;text-align:right;color:#555}
+.q-ctr{width:40px;text-align:right;color:#555}
+.q-pos{width:40px;text-align:right;font-weight:600;color:#0073aa}
+.footer{text-align:right;color:#bbb;font-size:0.75em;margin-top:20px}
+@media(max-width:768px){.g4,.g2{grid-template-columns:1fr 1fr}}.query-row{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>📊 MoneyGrandpa 성과 대시보드</h1>
+    <div class="sub">moneygrandpa.com · 2026-04-08 07:23 기준 · v1.2.0</div>
+  </div>
+  <button class="refresh-btn" onclick="location.reload()">🔄 새로고침</button>
+</div>
+<div class="container">
+
+  <div class="sec">📝 WordPress 성과</div>
+  <div class="grid g4">
+    <div class="card stat-card">
+      <div class="lbl">총 발행 포스트</div>
+      <div class="num blue">46</div>
+      <div class="sub">발행 40 · 예약 6</div>
+    </div>
+    <div class="card stat-card">
+      <div class="lbl">운영 기간</div>
+      <div class="num green">9<span style="font-size:.45em">일</span></div>
+      <div class="sub">누적</div>
+    </div>
+    <div class="card stat-card">
+      <div class="lbl">일평균 발행</div>
+      <div class="num orange">4.4<span style="font-size:.45em">편</span></div>
+      <div class="sub">목표: 3편/일</div>
+    </div>
+    <div class="card stat-card">
+      <div class="lbl">카테고리 수</div>
+      <div class="num purple">4<span style="font-size:.45em">개</span></div>
+      <div class="sub">Health · Economy · Life · Travel</div>
+    </div>
+  </div>
+
+  <div class="sec">🔍 검색 성과</div>
+  <div class="grid g4">
+    
+    <div class="card stat-card">
+      <div class="lbl">검색 클릭</div>
+      <div class="num red">0</div>
+      <div class="sub">지난 90일</div>
+    </div>
+    <div class="card stat-card">
+      <div class="lbl">검색 노출</div>
+      <div class="num teal">34</div>
+      <div class="sub">지난 90일</div>
+    </div>
+    <div class="card stat-card">
+      <div class="lbl">평균 CTR</div>
+      <div class="num indigo">0<span style="font-size:.45em">%</span></div>
+      <div class="sub">클릭율</div>
+    </div>
+    <div class="card stat-card">
+      <div class="lbl">평균 순위</div>
+      <div class="num pink">12.7<span style="font-size:.45em">위</span></div>
+      <div class="sub">검색 결과</div>
+    </div>
+  </div>
+
+  <div class="sec">카테고리 & 타임라인</div>
+  <div class="grid g2">
+    <div class="card">
+      <h2>📂 카테고리별 분포</h2>
+      
+        <div class="cat-row">
+          <div class="cat-label">🏥 Health</div>
+          <div class="cat-bar-bg">
+            <div class="cat-bar" style="width:32%;background:#0073aa;">15편 (32%)</div>
+          </div>
+          <div class="cat-count" style="color:#0073aa;">15</div>
+        </div>
+      
+        <div class="cat-row">
+          <div class="cat-label">🏠 Life</div>
+          <div class="cat-bar-bg">
+            <div class="cat-bar" style="width:23%;background:#27ae60;">11편 (23%)</div>
+          </div>
+          <div class="cat-count" style="color:#27ae60;">11</div>
+        </div>
+      
+        <div class="cat-row">
+          <div class="cat-label">💰 Economy</div>
+          <div class="cat-bar-bg">
+            <div class="cat-bar" style="width:26%;background:#e67e22;">12편 (26%)</div>
+          </div>
+          <div class="cat-count" style="color:#e67e22;">12</div>
+        </div>
+      
+        <div class="cat-row">
+          <div class="cat-label">✈️ Travel</div>
+          <div class="cat-bar-bg">
+            <div class="cat-bar" style="width:17%;background:#8e44ad;">8편 (17%)</div>
+          </div>
+          <div class="cat-count" style="color:#8e44ad;">8</div>
+        </div>
+    </div>
+    <div class="card">
+      <h2>📅 월별 발행 추이</h2>
+      <div class="m-row"><span class="m-label">2026-04</span><span class="m-bar">██████████████████████████████</span><span class="m-count">45편</span></div><div class="m-row"><span class="m-label">2026-03</span><span class="m-bar">█</span><span class="m-count">1편</span></div>
+    </div>
+  </div>
+
+  <div class="sec">최근 발행 포스트 (10편)</div>
+  <div class="card">
+    
+        <div class="tl-row">
+          <div class="tl-date">04-08</div>
+          <div class="tl-id">#2592</div>
+          <a href="https://moneygrandpa.com/?p=2592" target="_blank" class="tl-slug" title="utility-assistance-programs-las-vegas-seniors">utility-assistance-programs-las-vegas-seniors</a>
+          <span class="badge badge-future">예약</span><span class="badge badge-economy">Economy</span>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">04-08</div>
+          <div class="tl-id">#2590</div>
+          <a href="https://moneygrandpa.com/?p=2590" target="_blank" class="tl-slug" title="senior-part-time-jobs-las-vegas-2026">senior-part-time-jobs-las-vegas-2026</a>
+          <span class="badge badge-future">예약</span><span class="badge badge-economy">Economy</span>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">04-08</div>
+          <div class="tl-id">#2586</div>
+          <a href="https://moneygrandpa.com/?p=2586" target="_blank" class="tl-slug" title="diabetes-management-seniors-las-vegas">diabetes-management-seniors-las-vegas</a>
+          <span class="badge badge-future">예약</span><span class="badge badge-health">Health</span>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">04-08</div>
+          <div class="tl-id">#2600</div>
+          <a href="https://moneygrandpa.com/?p=2600" target="_blank" class="tl-slug" title="volunteer-opportunities-seniors-las-vegas">volunteer-opportunities-seniors-las-vegas</a>
+          <span class="badge badge-future">예약</span><span class="badge badge-life">Life</span>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">04-08</div>
+          <div class="tl-id">#2584</div>
+          <a href="https://moneygrandpa.com/?p=2584" target="_blank" class="tl-slug" title="hearing-loss-seniors-las-vegas-resources">hearing-loss-seniors-las-vegas-resources</a>
+          <span class="badge badge-future">예약</span><span class="badge badge-health">Health</span>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">04-08</div>
+          <div class="tl-id">#2580</div>
+          <a href="https://moneygrandpa.com/?p=2580" target="_blank" class="tl-slug" title="grand-canyon-accessible-tours-las-vegas-seniors">grand-canyon-accessible-tours-las-vegas-seniors</a>
+          <span class="badge badge-future">예약</span><span class="badge badge-travel">Travel</span>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">04-08</div>
+          <div class="tl-id">#2579</div>
+          <a href="https://moneygrandpa.com/hoover-dam-tour-seniors-las-vegas/" target="_blank" class="tl-slug" title="hoover-dam-tour-seniors-las-vegas">hoover-dam-tour-seniors-las-vegas</a>
+          <span class="badge badge-publish">발행</span><span class="badge badge-travel">Travel</span>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">04-07</div>
+          <div class="tl-id">#2578</div>
+          <a href="https://moneygrandpa.com/accessible-attractions-las-vegas-mobility/" target="_blank" class="tl-slug" title="accessible-attractions-las-vegas-mobility">accessible-attractions-las-vegas-mobility</a>
+          <span class="badge badge-publish">발행</span><span class="badge badge-travel">Travel</span>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">04-07</div>
+          <div class="tl-id">#2577</div>
+          <a href="https://moneygrandpa.com/senior-travel-discounts-las-vegas-airport/" target="_blank" class="tl-slug" title="senior-travel-discounts-las-vegas-airport">senior-travel-discounts-las-vegas-airport</a>
+          <span class="badge badge-publish">발행</span><span class="badge badge-travel">Travel</span>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">04-07</div>
+          <div class="tl-id">#2558</div>
+          <a href="https://moneygrandpa.com/las-vegas-senior-transportation-options/" target="_blank" class="tl-slug" title="las-vegas-senior-transportation-options">las-vegas-senior-transportation-options</a>
+          <span class="badge badge-publish">발행</span><span class="badge badge-life">Life</span>
+        </div>
+  </div>
+
+  
+  <div class="sec">🔍 Google Search Console</div>
+
+  <div class="sec-sub">상위 검색 쿼리 (Top 20)</div>
+  <div class="card">
+    <div class="query-header">
+      <div class="qh-text">검색어</div>
+      <div class="qh-clicks">클릭</div>
+      <div class="qh-impr">노출</div>
+      <div class="qh-ctr">CTR</div>
+      <div class="qh-pos">순위</div>
+    </div>
+    
+        <div class="query-row">
+          <div class="q-text">grandpa money</div>
+          <div class="q-clicks">0</div>
+          <div class="q-impr">1</div>
+          <div class="q-ctr">0%</div>
+          <div class="q-pos">49</div>
+        </div>
+        <div class="query-row">
+          <div class="q-text">henderson or summerlin</div>
+          <div class="q-clicks">0</div>
+          <div class="q-impr">1</div>
+          <div class="q-ctr">0%</div>
+          <div class="q-pos">78</div>
+        </div>
+        <div class="query-row">
+          <div class="q-text">henderson vs summerlin</div>
+          <div class="q-clicks">0</div>
+          <div class="q-impr">1</div>
+          <div class="q-ctr">0%</div>
+          <div class="q-pos">57</div>
+        </div>
+        <div class="query-row">
+          <div class="q-text">senior discounts las vegas venues shows</div>
+          <div class="q-clicks">0</div>
+          <div class="q-impr">2</div>
+          <div class="q-ctr">0%</div>
+          <div class="q-pos">3</div>
+        </div>
+        <div class="query-row">
+          <div class="q-text">summerlin or henderson</div>
+          <div class="q-clicks">0</div>
+          <div class="q-impr">1</div>
+          <div class="q-ctr">0%</div>
+          <div class="q-pos">56</div>
+        </div>
+  </div>
+
+  <div class="sec-sub">노출수 추이 (지난 30일)</div>
+  <div class="card">
+    <div style="display:flex;gap:20px;align-items:center;">
+      <div style="flex:1;height:180px;">
+        <canvas id="trendChart" width="400" height="150"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const dates = ["2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06"];
+  const impressions = [0, 0, 1, 4, 6, 23];
+
+  if (dates.length > 0) {
+    const canvas = document.getElementById('trendChart');
+    const ctx = canvas.getContext('2d');
+    const maxImpr = Math.max(...impressions) || 1;
+    const padding = 30;
+    const width = canvas.width - padding * 2;
+    const height = canvas.height - padding * 2;
+
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (height / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(canvas.width - padding, y);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#4CAF50';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < impressions.length; i++) {
+      const x = padding + (width / (impressions.length - 1 || 1)) * i;
+      const y = padding + height - (height / maxImpr) * impressions[i];
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = '#4CAF50';
+    for (let i = 0; i < impressions.length; i++) {
+      const x = padding + (width / (impressions.length - 1 || 1)) * i;
+      const y = padding + height - (height / maxImpr) * impressions[i];
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  </script>
+
+  <div class="footer">자동 생성 by Claude · 2026-04-08 07:23</div>
+</div>
+</body>
+</html>
